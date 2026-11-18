@@ -10,6 +10,7 @@ class Doctor extends Model
         'name',
         'specialty',
         'description',
+        'experience',
         'location',
         'price',
         'duration'
