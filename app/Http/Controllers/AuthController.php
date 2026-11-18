@@ -18,7 +18,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => ['required', 'string', Password::min(8)->mixedCase()->numbers()->symbols()],
             'phone' => 'required|numeric',
-            'role' => 'required|in:admin,patient'
+            'role' => 'in:admin,patient'
         ]);
         if ($data->fails()) {
             return response()->json([
@@ -39,7 +39,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $data = Validator::make($request->all(), [
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|exists:users,email',
             'password' => 'required|string',
         ]);
         if ($data->fails()) {
@@ -50,7 +50,9 @@ class AuthController extends Controller
             ], 422);
         }
         $user = User::where('email', $request->email)->first();
-        if (!$user || !Hash::check($request->password, $request->password)) {
+        // if (!$user || !hash_equals($user->password, hash('sha256', $request->password)))
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Email or password incorrect'

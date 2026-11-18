@@ -30,7 +30,11 @@ class User extends Authenticatable
 
     public function appointment()
     {
-        return $this->hasMany(Appointment::class, 'user_id');
+        return $this->hasMany(Appointment::class, 'patient_id');
+    }
+    public function savedDoctor()
+    {
+        return $this->hasMany(SavedDoctor::class, 'patient_id');
     }
 
 

@@ -11,6 +11,7 @@ class Appointment extends Model
         'doctor_id',
         'coupon_code',
         'payment_method',
+        'price_paid',
         'status'
     ];
 

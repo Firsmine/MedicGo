@@ -7,12 +7,12 @@ use App\Http\Controllers\SavedDoctorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('medicgo-api/v1')->group(function () {
+Route::prefix('v1')->group(function () {
     Route::prefix('users')->group(function () {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
         Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-        Route::post('profile', [AuthController::class, 'profile'])->middleware('auth:sanctum');
+        Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:sanctum');
     });
 
     Route::middleware('auth:sanctum')->group(function () {
@@ -27,7 +27,7 @@ Route::prefix('medicgo-api/v1')->group(function () {
 
         // saved doctors
         Route::post('saved-doctors', [SavedDoctorController::class, 'store']);
-        Route::get('saved-doctors', [AppointmentController::class, 'index']);
-        Route::delete('saved-doctors/{id}', [AppointmentController::class, 'destroy']);
+        Route::get('saved-doctors', [SavedDoctorController::class, 'index']);
+        Route::delete('saved-doctors/{id}', [SavedDoctorController::class, 'destroy']);
     });
 });

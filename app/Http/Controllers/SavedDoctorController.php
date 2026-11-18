@@ -14,7 +14,7 @@ class SavedDoctorController extends Controller
      */
     public function index(Request $request)
     {
-        $savedDoctor = $request->user()->savedDoctor->get();
+        $savedDoctor = $request->user()->savedDoctor()->get();
         return response()->json([
             'status' => 'success',
             'message' => 'Get all saved doctor successfully',
@@ -37,7 +37,7 @@ class SavedDoctorController extends Controller
                 'errors' => $data->errors()
             ], 422);
         }
-        $savedDoctor = $request->user()->savedDoctor->create([
+        $savedDoctor = $request->user()->savedDoctor()->create([
             'patient_id' => $request->user()->id,
             'doctor_id' => $request->doctor_id
         ]);

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PromoCode extends Model
 {
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'code',
         'discount_pct',

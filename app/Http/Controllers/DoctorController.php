@@ -12,7 +12,7 @@ class DoctorController extends Controller
 {
     public function index()
     {
-        $doctors = Doctor::get()->paginate(10);
+        $doctors = Doctor::paginate(10);
         return response()->json([
             'status' => 'success',
             'message' => 'Get all doctors successfully',
@@ -21,7 +21,7 @@ class DoctorController extends Controller
     }
     public function show(string $id)
     {
-        $doctor = Doctor::where('id', $id);
+        $doctor = Doctor::with('expertise')->find($id);
         return response()->json([
             'status' => 'success',
             'message' => 'Get doctor successfully',
@@ -31,8 +31,7 @@ class DoctorController extends Controller
 
     public function store(Request $request)
     {
-        $admin = $request->user()->where('role' == 'admin');
-        if (!$admin) {
+        if ($request->user()->role !== 'admin') {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Forbidden access',
@@ -66,11 +65,14 @@ class DoctorController extends Controller
             'price' => $request->price,
             'duration' => $request->duration,
         ]);
-        $expertise = Expertise::create([
-            'title' => $request->expertise->title,
-            'content' => $request->expertise->content,
-            'doctor_id' => $doctor->id
-        ]);
+        $expertise = [];
+        foreach ($request->expertise as $item) {
+            $expertise[] = Expertise::create([
+                'title' => $item['title'],
+                'content' => $item['content'],
+                'doctor_id' => $doctor->id,
+            ]);
+        }
         return response()->json([
             'status' => 'success',
             'message' => 'Doctor added successfully',

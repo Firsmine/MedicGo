@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\Doctor;
+use App\Models\PromoCode;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class AppointmentController extends Controller
@@ -14,7 +16,7 @@ class AppointmentController extends Controller
      */
     public function index(Request $request)
     {
-        $appointment = $request->user()->appointment->get();
+        $appointment = $request->user()->appointment()->get();
         return response()->json([
             'status' => 'success',
             'message' => 'Get all appointment successfully',
@@ -39,18 +41,42 @@ class AppointmentController extends Controller
         $doctor = Doctor::findOrFail($request->doctor_id);
         $price = $doctor->price;
         $pricePaid = $price;
-        $appointment = Appointment::create([
-            'patient_id' => $request->user()->id,
-            'doctor_id' => $request->doctor_id,
-            'payment_method' => $request->payment_method,
-            'coupon_code' => $request->coupon_code,
-            'price_paid' => $pricePaid,
-            'status' => 'Waiting for Confirmation'
-        ]);
+        $promo = null;
+        if ($request->filled('coupon_code')) {
+            $promo = PromoCode::where('code', $request->coupon_code)->first();
+            if ($promo->quota <= 0) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promo code quota has run out',
+                ], 422);
+            }
+            if (\Carbon\Carbon::parse($promo->expiry_date)->isPast()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promo code has expired',
+                ], 422);
+            }
+            $discountAmount = $price * ($promo->discount_pct / 100);
+            $pricePaid = max(0, round($price - $discountAmount, 2));
+        }
+        $appointment = DB::transaction(function () use ($request, $pricePaid, $promo) {
+            if ($promo) {
+                $promo->decrement('quota');
+            }
+            return Appointment::create([
+                'patient_id' => $request->user()->id,
+                'doctor_id' => $request->doctor_id,
+                'payment_method' => $request->payment_method,
+                'coupon_code' => $request->coupon_code,
+                'price_paid' => $pricePaid,
+                'status' => 'Waiting for Confirmation',
+            ]);
+        });
+
         return response()->json([
             'status' => 'success',
             'message' => 'Appointment created successfully',
-            'data' => $appointment
-        ], 200);
+            'data' => $appointment,
+        ], 201);
     }
 }
