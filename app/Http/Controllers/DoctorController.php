@@ -31,6 +31,13 @@ class DoctorController extends Controller
 
     public function store(Request $request)
     {
+        $admin = $request->user()->where('role' == 'admin');
+        if (!$admin) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Forbidden access',
+            ], 403);
+        }
         $data = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'specialty' => 'required|string',
